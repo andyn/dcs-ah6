@@ -1,0 +1,31 @@
+0.3 26 June 2020
+- Added GAU-19 .50 cal gattling gun
+- Added basic Force Feedback support
+- Added option to remove weapon platform
+- Added trim controls
+- Added controls indicator
+- M134 minigun now drops spent shells
+EFM:
+- labeled data tables so they are easier to understand their affect on the FM
+- reduced rotational instability during straight and level flight
+
+0.21 20 June 2020
+- Fixed throttle wrap-around when using keyboard
+- Added throttle axis assignment
+- Changed to have full rpm on hot start
+
+0.2 16 June 2020
+- Added M880 digital clock display
+- Removed some unused key commands + fixed missing view commands for joystick
+- Moved engine and electric system from lua to EFM to provide better working example
+- Reduced pitch back at high speed
+- Cleaned up source code and reorganized
+- Updated DCS API (wHumanCustomPhysicsAPI) with newest version
+
+0.11  23 March 2020
+-Added more network animations for multiplayer
+-Added option for copilot to take control
+-Added Mainpanel layout diagram in Doc folder
+
+0.1  22 March 2020
+- Initial Release
