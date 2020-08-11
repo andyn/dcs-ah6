@@ -1,3 +1,14 @@
+0.35
+- Added zoom axis
+- Changed rockets in loadout from practice to HE and added White Phosphorus
+- Added menu background by Silvrav
+- Added segmented display to fuel gauge
+EFM
+- Lift now affected by missing rotor blades
+- Further reduced pitch-back at high speed
+- First implementation of ground effect and VRS introduced
+- Added experimental N2 and TOT simulation
+
 0.3 26 June 2020
 - Added GAU-19 .50 cal gattling gun
 - Added basic Force Feedback support

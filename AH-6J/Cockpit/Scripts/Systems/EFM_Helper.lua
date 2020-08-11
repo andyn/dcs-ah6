@@ -55,8 +55,8 @@ function SetCommand(command,value)
 		end
 	elseif command==Keys.ThrottleIncrease then
 		local amount = Throtpos + 0.002
-		if amount > 0.990 then
-			amount = 0.990
+		if amount > 0.998 then
+			amount = 0.998
 		end
 		dev:performClickableAction(EFM_commands.throttle,amount,true)
 		dispatch_action(nil,EFM_commands.throttle,amount)

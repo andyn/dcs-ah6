@@ -4,17 +4,6 @@
 
 // JP8 weight 6.65lbs/gal ?
 
-class AH6FuelPump
-{
-public:
-
-	double fuel_flow;
-
-	AH6FuelPump() 
-		: fuel_flow(0)
-	{}
-	~AH6FuelPump() {}
-};
 
 class AH6FuelTank
 {
@@ -192,7 +181,6 @@ public:
 		{
 			isFuelFlow = false;
 		}
-	
 	}
 
 };

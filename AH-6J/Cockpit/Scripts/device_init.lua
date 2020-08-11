@@ -19,7 +19,12 @@ indicators = {}
 indicators[#indicators + 1] = {"ccIndicator" ,LockOn_Options.script_path.."FuelIndicator/init.lua",nil}
 indicators[#indicators + 1] = {"ccIndicator" ,LockOn_Options.script_path.."BearingIndicator/init.lua",nil}
 indicators[#indicators + 1] = {"ccIndicator" ,LockOn_Options.script_path.."RadarAltitude/init.lua",nil}
---indicators[#indicators + 1] = {"ccIndicator" ,LockOn_Options.script_path.."EngineDisplay/Indicator/init.lua",nil}
+indicators[#indicators + 1] = {"ccIndicator",LockOn_Options.script_path.."RPM_Display/init.lua", nil,--id of parent device
+  {{"ENG_PNT_CENTER",nil,nil}, {nil}}
+} 
+indicators[#indicators + 1] = {"ccIndicator",LockOn_Options.script_path.."tempTorqDisplay/init.lua", nil,--id of parent device
+  {{"ENG_PNT2_CENTER",nil,nil}, {nil}}
+}
 indicators[#indicators + 1] = {"ccIndicator" ,LockOn_Options.script_path.."RWR/Indicator/init.lua",nil}
 indicators[#indicators + 1] = {"ccIndicator" ,LockOn_Options.script_path.."M880A_digitalClock/init.lua",nil}
 

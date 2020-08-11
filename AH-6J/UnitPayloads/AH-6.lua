@@ -2,10 +2,10 @@ local unitPayloads = {
 	["name"] = "AH-6",
 	["payloads"] = {
 		[1] = {
-			["name"] = "M134 minigun *2, FFAR *14",
+			["name"] = "M134 minigun *2, Hydra 70 *14",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{FC85D2ED-501A-48ce-9863-49D468DDD5FC}",
+					["CLSID"] = "{A021F29D-18AB-4d3e-985C-FC9C60E35E9E}",
 					["num"] = 1,
 				},
 				[2] = {
@@ -17,7 +17,7 @@ local unitPayloads = {
 					["num"] = 4,
 				},
 				[5] = {
-					["CLSID"] = "{FC85D2ED-501A-48ce-9863-49D468DDD5FC}",
+					["CLSID"] = "{A021F29D-18AB-4d3e-985C-FC9C60E35E9E}",
 					["num"] = 5,
 				},
 			},
@@ -28,10 +28,10 @@ local unitPayloads = {
 		},
 
 		[2] = {
-			["name"] = "M134 minigun, FFAR *7, GAU-19 .50 Cal",
+			["name"] = "M134 minigun, Hydra 70 *7, GAU-19 .50 Cal",
 			["pylons"] = {
 				[1] = {
-					["CLSID"] = "{FC85D2ED-501A-48ce-9863-49D468DDD5FC}",
+					["CLSID"] = "{A021F29D-18AB-4d3e-985C-FC9C60E35E9E}",
 					["num"] = 1,
 				},
 				[2] = {

@@ -646,8 +646,11 @@ namespace Helicopter
 			Ndp = _Ndp(airspeed);
 		}
 	
+
 		
 	public:
+		double		groundEffectFactor; // ranges 1-1.3, 1.3 being max ground effect
+
 		AH6Aero();
 		~AH6Aero() {};
 
@@ -656,29 +659,30 @@ namespace Helicopter
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 		void computeTotals(const double airspeedx, const double airspeedy, const double airspeedz, 
 						const double pitchRate, const double rollRate, const double yawRate, 
-						const double CollectiveInput, const double PitchInput, const double RollInput, const double PedalInput, const double airspeed_KTS, const double rpm)
+						const double CollectiveInput, const double PitchInput, const double RollInput, const double PedalInput, 
+						const double airspeed_KTS, const double rpm, const double rotorIntegrity, const double tailRotorIntegrity)
 		{
 			const double airspeed_Limited = limit(airspeedx, -40.0, 130.0);// data tables are based on airspeed between -40 to 130
 			stabilityDerivatives(airspeed_Limited); // load stability/control derivatives from table data based on airspeed (in knots)
 
-			/*  Cx_tot		force out nose */
-			Cx_total = Xu * airspeedx + Xw * airspeedz + Xq * pitchRate + Xv * airspeedy + Xp * rollRate + Xr * yawRate + (Xdc * CollectiveInput + Xdb * PitchInput + Xda * RollInput + Xdp * PedalInput) * rpm;
+			/*  Cx_tot		force out nose (-drag)*/
+			Cx_total = Xu * airspeedx + Xw * airspeedz + Xq * pitchRate + Xv * airspeedy + Xp * rollRate + Xr * yawRate + (rotorIntegrity * (Xdc * CollectiveInput + Xdb * PitchInput + Xda * RollInput) + Xdp * PedalInput * tailRotorIntegrity) * rpm;
 
-			/*  Cz_tot		force out bottom */ 
-			Cz_total = Zu * airspeedx + Zw * airspeedz + Zq * pitchRate + Zv * airspeedy + Zp * rollRate + Zr * yawRate + (Zdc * CollectiveInput + Zdb * PitchInput + Zda * RollInput + Zdp * PedalInput) * rpm;
+			/*  Cz_tot		force out bottom (lift)*/ 
+			Cz_total = (Zu * airspeedx + Zw * airspeedz + Zq * pitchRate + Zv * airspeedy + Zp * rollRate + Zr * yawRate + (rotorIntegrity * (Zdc * CollectiveInput + Zdb * PitchInput + Zda * RollInput) + Zdp * PedalInput * tailRotorIntegrity) * rpm) * groundEffectFactor;
 			
 			/*  Cm_tot		pitch moment */ 
-			Cm_total = Mu * airspeedx + Mw * airspeedz + Mq * pitchRate + Mv * airspeedy + Mp * rollRate + Mr * yawRate + (Mdc * CollectiveInput + Mdb * PitchInput + Mda * RollInput + Mdp * PedalInput) * rpm;
+			Cm_total = Mu * airspeedx + Mw * airspeedz + Mq * pitchRate + Mv * airspeedy + Mp * rollRate + Mr * yawRate + (rotorIntegrity * (Mdc * CollectiveInput + Mdb * PitchInput + Mda * RollInput) + Mdp * PedalInput * tailRotorIntegrity) * rpm;
 
 
 			/*  Cy_tot		force out right wing */
-			Cy_total = Yu * airspeedx + Yw * airspeedz + Yq * pitchRate + Yv * airspeedy + Yp * rollRate + Yr * yawRate + (Ydc * CollectiveInput + Ydb * PitchInput + Yda * RollInput + Ydp * PedalInput) * rpm;
+			Cy_total = Yu * airspeedx + Yw * airspeedz + Yq * pitchRate + Yv * airspeedy + Yp * rollRate + Yr * yawRate + (rotorIntegrity * (Ydc * CollectiveInput + Ydb * PitchInput + Yda * RollInput) + Ydp * PedalInput * tailRotorIntegrity) * rpm;
 	
 			/*  Cl_total	roll moment */
-			Cl_total = Lu * airspeedx + Lw * airspeedz + Lq * pitchRate + Lv * airspeedy + Lp * rollRate + Lr * yawRate + (Ldc * CollectiveInput + Ldb * PitchInput + Lda * RollInput + Ldp * PedalInput) * rpm;
+			Cl_total = Lu * airspeedx + Lw * airspeedz + Lq * pitchRate + Lv * airspeedy + Lp * rollRate + Lr * yawRate + (rotorIntegrity * (Ldc * CollectiveInput + Ldb * PitchInput + Lda * RollInput) + Ldp * PedalInput * tailRotorIntegrity) * rpm;
 			
 			/*  Cn_tot		 yaw moment */ 
-			Cn_total = Nu * airspeedx + Nw * airspeedz + Nq * pitchRate + Nv * airspeedy + Np * rollRate + Nr * yawRate + (Ndc * CollectiveInput + Ndb * PitchInput + Nda * RollInput + Ndp * PedalInput) * rpm;
+			Cn_total = Nu * airspeedx + Nw * airspeedz + Nq * pitchRate + Nv * airspeedy + Np * rollRate + Nr * yawRate + (rotorIntegrity * (Ndc * CollectiveInput + Ndb * PitchInput + Nda * RollInput) + Ndp * PedalInput * tailRotorIntegrity) * rpm;
 
 		}
 
@@ -689,10 +693,18 @@ namespace Helicopter
 		double getCnTotal() const { return Cn_total; }
 		double getClTotal() const { return Cl_total; }
 
+		// basic hackish ground effect. simply increases overall lift force by up to 30%
+		void setGroundEffectFactor(const double factor)
+		{
+			groundEffectFactor = 1 + factor * 0.3;
+		}
+
 	}; // class AH6Aero
 
 	// constructor
 	AH6Aero::AH6Aero() :
+		groundEffectFactor(0),
+
 		Cx_total(0),
 		Cz_total(0),
 		Cm_total(0),

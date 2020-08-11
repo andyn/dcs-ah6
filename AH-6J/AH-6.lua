@@ -109,7 +109,7 @@ AH6 = {
 			[1] =
 			{	ejection_seat_name	=	0, -- name of object file used for pilot ejection
 				drop_canopy_name	=	0, -- name of object file used for canopy jettison
-				pos = 	{0.725, 0.14, 0.35}, -- used for ejection location	
+				pos = 	{0.725, 0.14, 0.7}, -- used for ejection location	
 				ejection_order    = 1,
 				can_be_playable  = true,	
 				role = "pilot",
@@ -118,7 +118,7 @@ AH6 = {
 			[2] =
 			{	ejection_seat_name	=	0,
 				drop_canopy_name	=	0,
-				pos = 	{0.725, 0.14, -0.35},
+				pos = 	{0.725, 0.14, -0.7},
 				ejection_order    = 2,
 				--pilot_body_arg  = 501,
 				can_be_playable  = true,	
@@ -129,23 +129,24 @@ AH6 = {
 
 	fires_pos =
 		{ 
-			[1] = 	{-1.399,	0.948,	0}, -- turbine cover
+			[1] = 	{-1.8,	-0.55,	0}, -- turbine exit
 		},		
 
 	Pylons = {
         pylon(1, 0, 0.241, -0.926, -1.55,	-- (Pylon #, ext wing=0(no ejection)/ext fuselage=1/internal bay=2, forward/back, up/down, left/right)
             {use_full_connector_position = true, connector = "Pylon1",},
             {
-				{CLSID = "{FC85D2ED-501A-48ce-9863-49D468DDD5FC}", arg_value = 0.0},	-- LAU-68-MK1 7 2.75"
+				{CLSID = "{A021F29D-18AB-4d3e-985C-FC9C60E35E9E}", arg_value = 0.0},	-- LAU-68-M151 High Explosive
+				{CLSID = "{4F977A2A-CD25-44df-90EF-164BFA2AE72F}", arg_value = 0.0},	-- LAU-68-MK156 White Phosphorus
 				{CLSID = "{FD90A1DC-9147-49FA-BF56-CB83EF0BD32B}", arg_value = 0.0},	-- LAU-61 - 19 2.75" rockets MK151 HE
-				{CLSID = "{AH6_GAU-19}", arg_value = 0.0,
+				{CLSID = "{AH6_GAU-19}", arg_value = 0.0,								-- .50 cal gun
 					forbidden = {{station = 2, loadout = {"{M134 Minigun}"}},}}, -- prohibits m134 from being mounted when gau-19 is mounted
             }
         ),
         pylon(2, 0, 0.241, -0.926, -0.945,
             {use_full_connector_position = true, connector = "Pylon2",},
             {
-                {CLSID = "{M134 Minigun}", arg_value = 0.0}, 
+                {CLSID = "{M134 Minigun}", arg_value = 0.0}, -- .308 cal gun
             }
         ),
 		pylon(3, 0, 0.0, 0.0, 0.0,
@@ -170,15 +171,16 @@ AH6 = {
         pylon(4, 0, 0.241, -0.926, 0.945,
             {use_full_connector_position = true, connector = "Pylon3",DisplayName = "3",},
             {
-				{CLSID = "{M134 Minigun}", arg_value = 0.0}, 
+				{CLSID = "{M134 Minigun}", arg_value = 0.0}, -- .308 cal gun
             }
         ),
         pylon(5, 0, 0.241, -0.926, 1.55,
             {use_full_connector_position = true, connector = "Pylon4",DisplayName = "4",},
             {
-                {CLSID = "{FC85D2ED-501A-48ce-9863-49D468DDD5FC}", arg_value = 0.0},	-- LAU-68-MK1 7 2.75"
+                {CLSID = "{A021F29D-18AB-4d3e-985C-FC9C60E35E9E}", arg_value = 0.0},	-- LAU-68-M151 High Explosive
+				{CLSID = "{4F977A2A-CD25-44df-90EF-164BFA2AE72F}", arg_value = 0.0},	-- LAU-68-MK156 White Phosphorus
 				{CLSID = "{FD90A1DC-9147-49FA-BF56-CB83EF0BD32B}", arg_value = 0.0},	-- LAU-61 - 19 2.75" rockets MK151 HE
-				{CLSID = "{AH6_GAU-19}", arg_value = 0.0,
+				{CLSID = "{AH6_GAU-19}", arg_value = 0.0,								-- .50 cal gun
 					forbidden = {{station = 4, loadout = {"{M134 Minigun}"}},}}, 
             }
         ),
@@ -227,7 +229,7 @@ AH6 = {
 		["BLADE_5_IN"]		= {critical_damage = 1, args = {165}},
 		["BLADE_5_CENTER"]	= {critical_damage = 1, args = {165}},
 		
-		["MAIN"]  			= {critical_damage = 15, args = {151}}, 
+		["MAIN"]  			= {critical_damage = 10, args = {151}}, 
 		
 		["WING_L"]			= {critical_damage = 5, args = {156}}, -- left skid shell
 		["ELEVATOR_L_OUT"]	= {critical_damage = 1, args = {156}}, -- left skid line F
@@ -236,8 +238,8 @@ AH6 = {
 		["ELEVATOR_R_OUT"]	= {critical_damage = 1, args = {157}}, -- right skid line F
 		["Line_STABIL_R"]	= {critical_damage = 1, args = {157}}, -- right skid line R
 		
-		["TAIL"]			= {critical_damage = 5, args = {159}, deps_cells = {"BLADE_6_OUT"}}, 
-		["BLADE_6_OUT"]		= {critical_damage = 2, args = {166}}, -- tail rotor blades
+		["TAIL"]			= {critical_damage = 4, args = {159}, deps_cells = {"BLADE_6_OUT"}}, 
+		["BLADE_6_OUT"]		= {critical_damage = 1, args = {166}}, -- tail rotor blades
 		
 		["CREW_1"]			= {critical_damage = 2, args = {205}}, -- pilot
 		["CREW_2"]			= {critical_damage = 2, args = {204}}, -- copilot
@@ -250,7 +252,7 @@ AH6 = {
 	}),
 	
 	Failures = {
-		-- { id = 'engine',	label = _('ENGINE'),	enable = false, hh = 0, mm = 0, mmint = 1, prob = 100 },
+		{ id = 'engfail',	label = _('ENGINE'),	enable = false, hh = 0, mm = 0, mmint = 1, prob = 100 },
 		{ id = 'rotor',		label = _('ROTOR'),		enable = false, hh = 0, mm = 0, mmint = 1, prob = 100 },
 	},
 
@@ -267,7 +269,7 @@ AH6 = {
 	lights = {
     [1] = { typename = "collection",
 				lights = {
-						[1] = {typename = "omnilight", connector = "RED_BEACON", color = {0.99, 0.11, 0.3}, pos_correction  = {0, 0, 0}, intensity_max = 6.0},
+						--[1] = {typename = "omnilight", connector = "RED_BEACON", color = {0.99, 0.11, 0.3}, pos_correction  = {0, 0, 0}, intensity_max = 6.0},
 				}
 			},
 	[2] = { typename = "collection",
@@ -277,7 +279,7 @@ AH6 = {
 			},
     [3]	= {	typename = "collection",
 				lights = {
-						[1] = {typename = "omnilight", connector = "BANO_1", color = {0.99, 0.11, 0.3}, pos_correction  = {0, 0, 0} },
+						--[1] = {typename = "omnilight", connector = "BANO_1", color = {0.99, 0.11, 0.3}, pos_correction  = {0, 0, 0} },
 				}
 			},
     [4] = {	typename = "collection",

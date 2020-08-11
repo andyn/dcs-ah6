@@ -261,6 +261,14 @@ keyCommands = {
 
 -- joystick axis 
 axisCommands = {
+    {action = iCommandViewHorizontalAbs			, name = _('Absolute Camera Horizontal View')},
+    {action = iCommandViewVerticalAbs			, name = _('Absolute Camera Vertical View')},
+    {action = iCommandViewZoomAbs				, name = _('Zoom View')},
+    {action = iCommandViewRollAbs 				, name = _('Absolute Roll Shift Camera View')},
+    {action = iCommandViewHorTransAbs 			, name = _('Absolute Horizontal Shift Camera View')},
+    {action = iCommandViewVertTransAbs 			, name = _('Absolute Vertical Shift Camera View')},
+    {action = iCommandViewLongitudeTransAbs 	, name = _('Absolute Longitude Shift Camera View')},
+	
 {combos = defaultDeviceAssignmentFor("roll")	, action = iCommandPlaneRoll,			name = _('Roll Cyclic')},
 {combos = defaultDeviceAssignmentFor("pitch")	, action = iCommandPlanePitch,			name = _('Pitch Cyclic')},
 {combos = defaultDeviceAssignmentFor("rudder")	, action = iCommandPlaneRudder, 		name = _('Pedals')},

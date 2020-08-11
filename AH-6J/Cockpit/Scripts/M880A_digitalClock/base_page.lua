@@ -4,7 +4,7 @@ SetScale(METERS)
 
 DEFAULT_LEVEL = 6
 NOCLIP_LEVEL  = DEFAULT_LEVEL - 1
-local FONT    = MakeFont({used_DXUnicodeFontData = "font7segment"},{0,255,0,255})
+local FONT    = MakeFont({used_DXUnicodeFontData = "font7segment"},{0,255,0,215})
 center={-0.112,-0.283,0.362}  --- {L/R,U/D,forward/back}
 
 

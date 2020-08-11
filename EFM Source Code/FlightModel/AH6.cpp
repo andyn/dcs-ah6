@@ -40,8 +40,8 @@
 #include "stdafx.h"
 
 // ED's API
-#include "Include/CockpitAPI_Declare.h" // Provides param handle interfacing for use in lua
-#include "include/API_Declare.h"	// Provides all DCS related functions in this cpp file
+#include "Include/Cockpit/CockpitAPI_Declare.h" // Provides param handle interfacing for use in lua
+#include "include/FM/API_Declare.h"	// Provides all DCS related functions in this cpp file
 
 #include "include/ED_FM_Utility.h"		// Provided utility functions that were in the initial EFM example
 #include "include/UtilityFunctions.h"
@@ -78,7 +78,7 @@ namespace Helicopter
 	double		RollControl			= 0.0;	// roll input adjusted for control
 	double		rollTrim			= 0.0;
 	double		pitchTrim			= 0.0;
-	double		OutsideAirTemp		= 0.0;	// for temp gauge
+	double		OutsideAirTemp		= 0.0;	// deg C, for temp gauge
 
 	double		ay_world			= 0.0;	// World referenced up/down acceleration (m/s^2)
 	double		accz				= 0.0;	// Az (per normal direction convention) out the bottom of the a/c (m/s^2)
@@ -137,27 +137,25 @@ void* COLLECTIVE_INPUT = Helicopter::cockpitAPI.getParamHandle("COLLECTIVE_INPUT
 // not actually time passed since last frame - it is constant 0.006000 seconds.
 void ed_fm_simulate(double dt)
 {
-	double frameTime = dt; // initialize only
-
+	
 	// Very important! clear out the forces and moments before you start calculated
 	// a new set for this run frame
 	Helicopter::Motion.clear();
 
 	// Get the total absolute velocity acting on the aircraft with wind included
 	// using english units so airspeed is in feet/second here
-	Helicopter::Motion.updateFrame(frameTime);
+	Helicopter::Motion.updateFrame(dt);
 
 
 	// update amount of fuel used and change in mass
-	Helicopter::Fuel.update(Helicopter::Engine.getCoreRelatedRPM(), frameTime); // note, still uses fuel when sim is paused
-	Helicopter::Engine.update(frameTime, Helicopter::Fuel.isFuelFlow, Helicopter::Electrics.isDC_busPowered);
+	Helicopter::Fuel.update(Helicopter::Engine.getCoreRelatedRPM(), dt); // note, still uses fuel when sim is paused
+	Helicopter::Engine.update(dt, Helicopter::Fuel.isFuelFlow, Helicopter::Electrics.isDC_busPowered, Helicopter::OutsideAirTemp, Helicopter::CollectiveInput);
 
-	Helicopter::Electrics.update(frameTime, Helicopter::Engine.N1_RPM);
-	Helicopter::Airframe.updateFrame(frameTime);
+	Helicopter::Electrics.update(dt, Helicopter::Engine.N1_RPM);
+	Helicopter::Airframe.updateFrame(dt);
 
-	//---------------------------------------------
 	//-----CONTROL DYNAMICS------------------------
-	//---------------------------------------------
+	// the four control constants seen here are the physical delfection amount in inches from the NASA report
 	Helicopter::RollControl = limit((Helicopter::RollInput + Helicopter::rollTrim), -1, 1) * 10.125;
 	Helicopter::PitchControl = limit((Helicopter::PitchInput + Helicopter::pitchTrim), -1, 1) * 18;
 	Helicopter::PedalControl = Helicopter::PedalInput * 5.5;
@@ -170,10 +168,21 @@ void ed_fm_simulate(double dt)
 
 	Helicopter::Aero.computeTotals(Helicopter::Motion.airspeed.x, Helicopter::Motion.airspeed.y, Helicopter::Motion.airspeed.z,
 		Helicopter::pitchRate_RPS, Helicopter::rollRate_RPS, Helicopter::yawRate_RPS,
-		Helicopter::CollectiveControl, Helicopter::PitchControl, Helicopter::RollControl, Helicopter::PedalControl, Helicopter::Motion.airspeed_KTS, Helicopter::Engine.getCoreRelatedRPM());
+		Helicopter::CollectiveControl, Helicopter::PitchControl, Helicopter::RollControl, Helicopter::PedalControl, Helicopter::Motion.airspeed_KTS, Helicopter::Engine.getCoreRelatedRPM(), Helicopter::Airframe.rotorIntegrityFactor, Helicopter::Airframe.tailRotorIntegrityFactor);
 
-	Helicopter::Motion.updateAeroForces(Helicopter::Aero.getCxTotal(), Helicopter::Aero.getCzTotal(), Helicopter::Aero.getCmTotal(), Helicopter::Aero.getCyTotal(), Helicopter::Aero.getClTotal(), Helicopter::Aero.getCnTotal() );
+	// set for ground effect simulation, rotor diameter is 8.33m
+	if (Helicopter::Motion.altitudeAGL <= 8.33)
+	{
+		// using linear dropoff (but a graph i saw showed that it should be exponential)
+		Helicopter::Aero.setGroundEffectFactor(1 - Helicopter::Motion.altitudeAGL / 8.33);
+	}
+	else
+	{
+		Helicopter::Aero.setGroundEffectFactor(0);
+	}
 	
+	Helicopter::Motion.updateAeroForces(Helicopter::Aero.getCxTotal(), Helicopter::Aero.getCzTotal(), Helicopter::Aero.getCmTotal(), Helicopter::Aero.getCyTotal(), Helicopter::Aero.getClTotal(), Helicopter::Aero.getCnTotal() );
+
 
 	Helicopter::Motion.updateFuelUsageMass(Helicopter::Fuel.getUsageSinceLastFrame(), 0, 0, 0);
 	Helicopter::Fuel.clearUsageSinceLastFrame();
@@ -182,23 +191,17 @@ void ed_fm_simulate(double dt)
 
 /*
 called before simulation to set up your environment for the next step
-give parameters of surface under your aircraft usefull for ground effect
+give parameters of surface under your aircraft 
 */
-void ed_fm_set_surface (double		h,//surface height under the center of aircraft
-						double		h_obj,//surface height with objects
-						unsigned		surface_type,
+void ed_fm_set_surface (double		h,//height of surface under the center of aircraft
+						double		h_obj,//height of surface with objects
+						unsigned	surface_type,
 						double		normal_x,//components of normal vector to surface
 						double		normal_y,//components of normal vector to surface
 						double		normal_z//components of normal vector to surface
 						)
-{
-	// TODO: check height, set for ground effect simulation?
-	// also if weight on wheels?
-	if (Helicopter::wingSpan_FT >= (Helicopter::meterToFoot*h) )
-	{
-		// in ground effect with the surface?
-		// flying above ground, no weight on wheels?
-	}
+{	
+	Helicopter::Motion.setSurface(h_obj);
 }
 
 void ed_fm_set_atmosphere(	double h,//altitude above sea level			(meters)
@@ -280,9 +283,6 @@ void ed_fm_set_current_state_body_axis(	double ax,//linear acceleration componen
 {
 	Helicopter::Motion.setAirspeed(vx, vy, vz, wind_vx, wind_vy, wind_vz);
 
-	//-------------------------------
-	// Start of setting states
-	//-------------------------------
 	Helicopter::alpha_DEG		= common_angle_of_attack * Helicopter::radiansToDegrees;
 	Helicopter::beta_DEG		= common_angle_of_slide * Helicopter::radiansToDegrees;
 	Helicopter::rollRate_RPS	= omegax;
@@ -293,12 +293,12 @@ void ed_fm_set_current_state_body_axis(	double ax,//linear acceleration componen
 	Helicopter::accy = az;
 }
 
-// list of input enums kept in separate header for easier documenting..
+// list of input enums kept in separate header for easier documenting
 //
 // Command = Command Index (See Export.lua), Value = Signal Value (-1 to 1 for Joystick Axis)
 void ed_fm_set_command(int command, float value)
 {
-	if (value > 1) // if the command comes from clickabledata.lua it adds the device id to the value and changes the value
+	if (value > 1) // if the command comes from clickabledata.lua, it adds the device id to the value and changes the value
 	{
 		float device_id;
 		float normalized = modf(value, &device_id);
@@ -524,6 +524,7 @@ void ed_fm_release ()
 	Helicopter::RollInput = 0;
 	Helicopter::rollTrim = 0;
 	Helicopter::pitchTrim = 0;
+	Helicopter::Aero.setGroundEffectFactor(0);
 }
 
 // see enum ed_fm_param_enum in wHumanCustomPhysicsAPI.h
@@ -532,7 +533,7 @@ double ed_fm_get_param(unsigned param_enum)
 	switch (param_enum)
 	{
 	case ED_FM_PROPELLER_0_RPM:	// this is neccesary for rotor sound, 470 rpm seems to be from AH-6.lua rotor_RPM definition
-		return Helicopter::Engine.getCoreRelatedRPM() * 470;
+		return Helicopter::Engine.N2_RPM/100 * 470;
 	case ED_FM_PROPELLER_0_PITCH:  // propeller blade pitch
 	case ED_FM_PROPELLER_0_TILT:   // for helicopter
 	case ED_FM_PROPELLER_0_INTEGRITY_FACTOR:   // for 0 to 1 , 0 is fully broken 
@@ -587,7 +588,6 @@ double ed_fm_get_param(unsigned param_enum)
 	case ED_FM_FUEL_INTERNAL_FUEL:
 	case ED_FM_FUEL_TOTAL_FUEL:
 		return Helicopter::Fuel.getInternalFuel();
-		//return 9;
 	case ED_FM_FUEL_LOW_SIGNAL:
 		return Helicopter::Fuel.isLowFuel();
 
@@ -596,7 +596,7 @@ double ed_fm_get_param(unsigned param_enum)
 		return 0;
 
 	case ED_FM_STICK_FORCE_CENTRAL_PITCH:  // i.e. trimmered position where force feeled by pilot is zero
-		return 0;//Trim values you programmed to trim aircraft out (0 to 1)
+		return Helicopter::pitchTrim;//Trim values you programmed to trim aircraft out (0 to 1)
 	case ED_FM_STICK_FORCE_FACTOR_PITCH:
 		return 1.0;//Force factor range from 0 to 1. Make it 1 and rather change the force factor in your aircraft setup controls menu (0 - 100 percent).
 	case ED_FM_STICK_FORCE_SHAKE_AMPLITUDE_PITCH:
@@ -604,7 +604,7 @@ double ed_fm_get_param(unsigned param_enum)
 		return 0;
 
 	case ED_FM_STICK_FORCE_CENTRAL_ROLL:   // i.e. trimmered position where force feeled by pilot is zero
-		return 0;//Trim values you programmed to trim aircraft out (0 to 1)
+		return Helicopter::rollTrim;//Trim values you programmed to trim aircraft out (0 to 1)
 	case ED_FM_STICK_FORCE_FACTOR_ROLL:
 		return 1.0;//Force factor range from 0 to 1. Make it 1 and rather change the force factor in your aircraft setup controls menu (0 - 100 percent).
 	case ED_FM_STICK_FORCE_SHAKE_AMPLITUDE_ROLL:
@@ -624,6 +624,7 @@ void ed_fm_cold_start()
 	Helicopter::Engine.initCold();
 	Helicopter::Fuel.initCold();
 	Helicopter::Electrics.initCold();
+	Helicopter::Airframe.init();
 }
 
 void ed_fm_hot_start()
@@ -631,6 +632,7 @@ void ed_fm_hot_start()
 	Helicopter::Engine.initHot();
 	Helicopter::Fuel.initHot();
 	Helicopter::Electrics.initHot();
+	Helicopter::Airframe.init();
 }
 
 void ed_fm_hot_start_in_air()
@@ -638,10 +640,12 @@ void ed_fm_hot_start_in_air()
 	Helicopter::Engine.initHot();
 	Helicopter::Fuel.initHot();
 	Helicopter::Electrics.initHot();
+	Helicopter::Airframe.init();
 }
 
 /* 
-for experts only : called  after ed_fm_hot_start_in_air for balance FM at actual speed and height , it is directly force aircraft dynamic data in case of success 
+for experts only : called  after ed_fm_hot_start_in_air for balance FM at actual speed and height,
+it is directly force aircraft dynamic data in case of success 
 */
 bool ed_fm_make_balance (double & ax,//linear acceleration component in world coordinate system);
 									double & ay,//linear acceleration component in world coordinate system
@@ -692,7 +696,7 @@ void ed_fm_repair()
 	Helicopter::Airframe.onRepair();
 }
 
-// in case of some internal damages or system failures this function return true , to switch on repair process
+// in case of some internal damages or system failures this function return true, to switch on repair process
 bool ed_fm_need_to_be_repaired()
 {
 	return Helicopter::Airframe.isRepairNeeded();
@@ -731,10 +735,26 @@ void ed_fm_set_property_string(const char * property_name,const char * value)
 //inform DCS about internal simulation event, like structure damage , failure , or effect
 bool ed_fm_pop_simulation_event(ed_fm_simulation_event & out)
 {
-	// something like this when triggered? (reset return value after output)
-	//out.event_type = ED_FM_EVENT_FAILURE;
-
-	return false;
+	if (Helicopter::Engine.engineFire == true)
+	{
+		// cant get this to work
+		Helicopter::Engine.engineFire = false;
+		out.event_type = ED_FM_EVENT_FIRE;
+		out.event_params[0] = 1; 
+		out.event_params[1] = (float)-1.8; // x pos
+		out.event_params[2] = (float)-0.55; // y pos
+		out.event_params[3] = 0; // z pos
+		out.event_params[4] = 1; // x component direction
+		out.event_params[5] = 0;
+		out.event_params[6] = 0;
+		out.event_params[7] = 1; // particle speed
+		out.event_params[8] = 1; // scale
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 // feedback to your fm about suspension state

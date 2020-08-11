@@ -69,7 +69,6 @@ namespace Helicopter
 		// mass times speed
 		//double kinetic_energy;
 
-		double temp;
 		double rho; // atmospheric density
 		double fuel_mass_delta; // change in fuel mass since last frame
 		double weight_N; // Weight force of aircraft (N)
@@ -79,7 +78,7 @@ namespace Helicopter
 		// Get the total absolute velocity acting on the aircraft with wind included
 		// using english units so airspeed is in feet/second here
 		Vec3	airspeed;
-		double		ambientTemperature_DegK;	// Ambient temperature (kelvon)
+		double		ambientTemperature_DegK;	// Ambient temperature (kelvin)
 		double		ambientDensity_KgPerM3;		// Ambient density (kg/m^3)
 		double		dynamicPressure_LBFT2;		// Dynamic pressure (lb/ft^2)
 		double		dynamicPressure_x;		// Dynamic pressure x (lb/ft^2)
@@ -94,6 +93,10 @@ namespace Helicopter
 		double		totalVelocity_MPS;	// Total velocity (always positive) (m/s)
 		double		airspeed_KTS;		// total airspeed (always positive) (knots)
 
+		double		surfaceAlt;  // height of surface under aircraft
+		double		altitudeAS;	 // above sea level
+		double		altitudeAGL; // above ground level, includes buildings and objects
+
 		AH6Motion() 
 			: common_moment()
 			, common_force()
@@ -102,7 +105,6 @@ namespace Helicopter
 			, fuel_mass_delta(0)
 			, weight_N(0)
 			, mass_kg(0)
-			, temp(0)
 			, rho(0)
 			, wind()
 			, velocity_world_cs()
@@ -120,6 +122,9 @@ namespace Helicopter
 			, ps_LBFT2(0)
 			, totalVelocity_MPS(0)
 			, airspeed_KTS(0)
+			, surfaceAlt(0)
+			, altitudeAS(0)
+			, altitudeAGL(0)
 		{}
 		~AH6Motion() {}
 
@@ -246,13 +251,17 @@ namespace Helicopter
 		{
 			ambientTemperature_DegK = temperature;
 			ambientDensity_KgPerM3 = density;
+			altitudeAS = altitude;
 			altitude_FT = altitude * Helicopter::meterToFoot; // meters to feet
 			ps_LBFT2 = pressure * 0.020885434273; // (N/m^2) to (lb/ft^2)
 			speed_of_sound = soundspeed;
 
 			// calculate some helpers already
-			temp = ambientTemperature_DegK ; // In Deg K
 			rho = ambientDensity_KgPerM3;
+		}
+		void setSurface(const double surfaceHeight)
+		{
+			surfaceAlt = surfaceHeight;
 		}
 
 		void setAirspeed(const double vx, const double vy, const double vz, const double wind_vx, const double wind_vy, const double wind_vz)
@@ -286,6 +295,8 @@ namespace Helicopter
 			dynamicPressure_x = .5 * rho * pow(airspeed.x, 2);  // q = .5*rho*V^2
 			dynamicPressure_z = .5 * rho * pow(airspeed.z, 2);  // q = .5*rho*V^2
 			dynamicPressure_y = .5 * rho * pow(airspeed.y, 2);  // q = .5*rho*V^2
+
+			altitudeAGL = altitudeAS - surfaceAlt;
 			
 		}
 		//----------------------------------------------------------------

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Include/CockpitAPI_Declare.h" 
+
 //Electrical System is based on the OH - 6A Cayuse operation manual
 class AH6ElectricSystem
 {
